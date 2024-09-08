@@ -8,9 +8,10 @@ namespace MoviesApi.Repositories.Concretes
     public class EFMovieRepository : IMovieRepository
     {
         private readonly MoviesDbContext _context;
-        public Task AddAsync(Movie movie)
+        public async Task AddAsync(Movie movie)
         {
-            throw new NotImplementedException();
+            await _context.AddAsync(movie);
+            await _context.SaveChangesAsync();
         }
 
         public Task DeleteAsync(int id)

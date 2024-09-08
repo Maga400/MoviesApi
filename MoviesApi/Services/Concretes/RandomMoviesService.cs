@@ -1,27 +1,65 @@
-﻿using MoviesApi.Entities;
+﻿using Microsoft.AspNetCore.Mvc;
+using MoviesApi.Entities;
+using MoviesApi.Services.Abstracts;
+using Newtonsoft.Json.Linq;
 using System.IO;
 
 namespace MoviesApi.Services.Concretes
 {
-    public class RandomMoviesService
+    public class RandomMoviesService : IRandomMoviesService
     {
         private readonly HttpClient _httpClient;
-        private string? Path { get; set; }
-        public RandomMoviesService() 
+        private readonly IMovieService _movieService;
+
+        public RandomMoviesService(HttpClient httpClient, IMovieService movieService)
         {
-            _httpClient = new HttpClient();
-            Path = "http://www.omdbapi.com/t=m";
+            _httpClient = httpClient;
+            _movieService = movieService;
         }
 
-        public async Task GetRandomMovies()
+        public async Task GetMoviesByRandomLetter()
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(Path);
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    var movie = await response.Content.ReadAsAsync<Movie>();
-            //}
-            //return Movie;
-            Console.WriteLine(response.Content);
+            // Rastgele harf seçimi
+            var letters = "abcdefghijklmnopqrstuvwxyz";
+            var random = new Random();
+            char randomLetter = letters[random.Next(letters.Length)];
+
+            // OMDb API anahtarını buraya ekle
+            var apiKey = "a581e938";
+
+            // OMDb API'ye istek at
+            var response = await _httpClient.GetAsync($"http://www.omdbapi.com/?apikey={apiKey}&s={randomLetter}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var movies = JObject.Parse(content);
+
+                var moviesList = new List<Movie>();
+
+                if (movies["Search"] != null)
+                {
+                    foreach (var movie in movies["Search"])
+                    {
+                        var movieItem = new Movie
+                        {
+                            Title = movie["Title"]?.ToString(),
+                            Year = (int)(movie["Year"]),
+                            Type = movie["Type"]?.ToString(),
+                            Actors = movie["Actors"]?.ToString(),
+                            imdbID = (int)(movie["imdbID"]),
+                        };
+
+                        moviesList.Add(movieItem);
+                    }
+                }
+                var addedMovie = moviesList.FirstOrDefault();
+                await _movieService.AddAsync(addedMovie);
+
+                //return Ok(movies);
+            }
+
+            //return BadRequest("Movies could not be fetched.");
         }
     }
 }
