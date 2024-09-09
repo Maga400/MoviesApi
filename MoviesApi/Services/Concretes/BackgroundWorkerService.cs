@@ -2,9 +2,8 @@
 using MoviesApi.Data;
 using MoviesApi.Entities;
 using MoviesApi.Services.Abstracts;
-using MoviesApi.Services.Concretes;
 
-namespace MoviesApi.Services
+namespace MoviesApi.Services.Concretes
 {
     public class BackgroundWorkerService : BackgroundService
     {
@@ -35,23 +34,15 @@ namespace MoviesApi.Services
                             var allMovie = await movieService.GetAllAsync();
                             var checkMovie = allMovie.FirstOrDefault(m => m.ImdbID == randomMovie.ImdbID);
 
-                            var movie = new Movie
+                            if (checkMovie == null)
                             {
-                                Title = randomMovie.Title,
-                                Year = (int)(randomMovie.Year),
-                                ImdbID = randomMovie.ImdbID,
-                                Type = randomMovie.Type,
-                                Actors = randomMovie.Actors,
-                            };
-                            if(checkMovie == null) 
-                            {
-                                await movieService.AddAsync(movie);
+                                await movieService.AddAsync(randomMovie);
                                 _logger.LogInformation("Movie added: {Title}", randomMovie.Title);
                             }
-                            else 
+                            else
                             {
                                 _logger.LogInformation("The Movie has in database: {Title}", randomMovie.Title);
-
+                                //continue;
                             }
                         }
                     }
@@ -64,7 +55,7 @@ namespace MoviesApi.Services
                 {
                     _logger.LogError(ex, "Error fetching or saving movie.");
                 }
-                finally 
+                finally
                 {
                     await Task.Delay(10000, stoppingToken);
                 }

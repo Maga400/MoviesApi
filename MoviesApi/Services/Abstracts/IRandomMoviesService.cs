@@ -5,6 +5,6 @@ namespace MoviesApi.Services.Abstracts
 {
     public interface IRandomMoviesService
     {
-        Task<MovieDto> GetRandomMovieAsync();
+        Task<Movie> GetRandomMovieAsync();
     }
 }

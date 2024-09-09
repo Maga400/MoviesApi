@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using MoviesApi.Data;
 using MoviesApi.Repositories.Abstracts;
 using MoviesApi.Repositories.Concretes;
-using MoviesApi.Services;
 using MoviesApi.Services.Abstracts;
 using MoviesApi.Services.Concretes;
 
@@ -18,7 +17,6 @@ builder.Services.AddHttpClient<IRandomMoviesService, RandomMoviesService>();
 builder.Services.AddScoped<IMovieRepository,EFMovieRepository>();
 builder.Services.AddScoped<IMovieService,EFMovieService>();
 builder.Services.AddHostedService<BackgroundWorkerService>();
-//builder.Services.AddScoped<IRandomMoviesService, RandomMoviesService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
