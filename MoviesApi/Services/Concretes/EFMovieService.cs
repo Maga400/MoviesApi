@@ -7,22 +7,25 @@ namespace MoviesApi.Services.Concretes
     public class EFMovieService : IMovieService
     {
         private readonly IMovieRepository _movieRepository;
+        public EFMovieService(IMovieRepository movieRepository)
+        {
+            _movieRepository = movieRepository;
+        }
         public async Task AddAsync(Movie movie)
         {
             await _movieRepository.AddAsync(movie);
-        }
 
+        }
         public Task DeleteAsync(int id)
         {
             throw new NotImplementedException();
         }
-
         public async Task<List<Movie>> GetAllAsync()
         {
             return await _movieRepository.GetAllAsync();
         }
 
-        public Task<List<Movie>> GetAsync(int id)
+        public Task<Movie> GetAsync(int id)
         {
             throw new NotImplementedException();
         }

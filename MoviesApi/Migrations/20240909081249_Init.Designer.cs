@@ -11,8 +11,8 @@ using MoviesApi.Data;
 namespace MoviesApi.Migrations
 {
     [DbContext(typeof(MoviesDbContext))]
-    [Migration("20240908070609_init")]
-    partial class init
+    [Migration("20240909081249_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,9 @@ namespace MoviesApi.Migrations
                     b.Property<string>("Actors")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImdbID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
@@ -42,9 +45,6 @@ namespace MoviesApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.Property<int>("imdbID")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

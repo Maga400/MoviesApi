@@ -32,6 +32,9 @@ namespace MoviesApi.Migrations
                     b.Property<string>("Actors")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImdbID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
@@ -39,9 +42,6 @@ namespace MoviesApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.Property<int>("imdbID")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

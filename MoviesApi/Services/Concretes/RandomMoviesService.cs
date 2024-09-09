@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MoviesApi.Dtos;
 using MoviesApi.Entities;
 using MoviesApi.Services.Abstracts;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
 
@@ -9,57 +11,39 @@ namespace MoviesApi.Services.Concretes
     public class RandomMoviesService : IRandomMoviesService
     {
         private readonly HttpClient _httpClient;
-        private readonly IMovieService _movieService;
+        private readonly string _omdbApiKey = "a581e938";
+        private readonly Random _random;
 
-        public RandomMoviesService(HttpClient httpClient, IMovieService movieService)
+        public RandomMoviesService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _movieService = movieService;
+            //_omdbApiKey = configuration["OmdbApiKey"];
+            _random = new Random();
         }
 
-        public async Task GetMoviesByRandomLetter()
+        public async Task<MovieDto> GetRandomMovieAsync()
         {
-            // Rastgele harf seçimi
-            var letters = "abcdefghijklmnopqrstuvwxyz";
-            var random = new Random();
-            char randomLetter = letters[random.Next(letters.Length)];
+            // Rastgele bir harf üret (a-z)
+            var randomLetter = (char)_random.Next('a', 'z' + 1);
+            var response = await _httpClient.GetAsync($"http://www.omdbapi.com/?t={randomLetter}&apikey=a581e938");
+            response.EnsureSuccessStatusCode();
 
-            // OMDb API anahtarını buraya ekle
-            var apiKey = "a581e938";
-
-            // OMDb API'ye istek at
-            var response = await _httpClient.GetAsync($"http://www.omdbapi.com/?apikey={apiKey}&s={randomLetter}");
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    var jsonResponse = await response.Content.ReadAsStringAsync();
+            //    var movieResponse = JsonConvert.DeserializeObject<MovieSearchResponse>(jsonResponse);
+            //    var movie = movieResponse.Search.First();
+            //    return movie;  // İlk filmi döner
+            //}
 
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                var movies = JObject.Parse(content);
-
-                var moviesList = new List<Movie>();
-
-                if (movies["Search"] != null)
-                {
-                    foreach (var movie in movies["Search"])
-                    {
-                        var movieItem = new Movie
-                        {
-                            Title = movie["Title"]?.ToString(),
-                            Year = (int)(movie["Year"]),
-                            Type = movie["Type"]?.ToString(),
-                            Actors = movie["Actors"]?.ToString(),
-                            imdbID = (int)(movie["imdbID"]),
-                        };
-
-                        moviesList.Add(movieItem);
-                    }
-                }
-                var addedMovie = moviesList.FirstOrDefault();
-                await _movieService.AddAsync(addedMovie);
-
-                //return Ok(movies);
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var movieResponse = JsonConvert.DeserializeObject<MovieDto>(jsonResponse);
+                return movieResponse;  // İlk filmi döner
             }
 
-            //return BadRequest("Movies could not be fetched.");
+            return null;
         }
     }
 }

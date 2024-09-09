@@ -8,9 +8,13 @@ namespace MoviesApi.Repositories.Concretes
     public class EFMovieRepository : IMovieRepository
     {
         private readonly MoviesDbContext _context;
+        public EFMovieRepository(MoviesDbContext context)
+        {
+            _context = context;
+        }
         public async Task AddAsync(Movie movie)
         {
-            await _context.AddAsync(movie);
+            await _context.Movies.AddAsync(movie);
             await _context.SaveChangesAsync();
         }
 
@@ -24,7 +28,7 @@ namespace MoviesApi.Repositories.Concretes
             return await _context.Movies.ToListAsync();
         }
 
-        public Task<List<Movie>> GetAsync(int id)
+        public Task<Movie> GetAsync(int id)
         {
             throw new NotImplementedException();
         }

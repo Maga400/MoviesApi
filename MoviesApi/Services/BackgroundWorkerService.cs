@@ -1,51 +1,74 @@
 ﻿using Microsoft.VisualBasic;
+using MoviesApi.Data;
+using MoviesApi.Entities;
 using MoviesApi.Services.Abstracts;
 using MoviesApi.Services.Concretes;
 
 namespace MoviesApi.Services
 {
-    public class BackgroundWorkerService : IHostedService, IDisposable
+    public class BackgroundWorkerService : BackgroundService
     {
+        private readonly IRandomMoviesService _randomMovieService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<BackgroundWorkerService> _logger;
-        private Timer _timer;
-        //private readonly IRandomMoviesService _randomMoviesService;
 
-        public BackgroundWorkerService(ILogger<BackgroundWorkerService> logger)
+        public BackgroundWorkerService(IRandomMoviesService randomMovieService, IServiceScopeFactory serviceScopeFactory, ILogger<BackgroundWorkerService> logger)
         {
+            _randomMovieService = randomMovieService;
+            _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
-            //_randomMoviesService = randomMoviesService;
         }
 
-        //private readonly RandomMoviesService _randomMoviesService = new RandomMoviesService();
-
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Background service is starting.");
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    var randomMovie = await _randomMovieService.GetRandomMovieAsync();
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
-             //await _randomMoviesService.GetMoviesByRandomLetter();
+                    if (randomMovie != null)
+                    {
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var movieService = scope.ServiceProvider.GetRequiredService<IMovieService>();
+                            var allMovie = await movieService.GetAllAsync();
+                            var checkMovie = allMovie.FirstOrDefault(m => m.ImdbID == randomMovie.ImdbID);
 
-            //return Task.CompletedTask;
-        }
+                            var movie = new Movie
+                            {
+                                Title = randomMovie.Title,
+                                Year = (int)(randomMovie.Year),
+                                ImdbID = randomMovie.ImdbID,
+                                Type = randomMovie.Type,
+                                Actors = randomMovie.Actors,
+                            };
+                            if(checkMovie == null) 
+                            {
+                                await movieService.AddAsync(movie);
+                                _logger.LogInformation("Movie added: {Title}", randomMovie.Title);
+                            }
+                            else 
+                            {
+                                _logger.LogInformation("The Movie has in database: {Title}", randomMovie.Title);
 
-        private void DoWork(object state)
-        {
-            _logger.LogInformation("Background work is being performed at: {time}", DateTimeOffset.Now);
-
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Background service is stopping.");
-
-            _timer?.Change(Timeout.Infinite, 0);
-
-            return Task.CompletedTask;
-        }
-        public void Dispose()
-        {
-            _timer?.Dispose();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No movie found.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error fetching or saving movie.");
+                }
+                finally 
+                {
+                    await Task.Delay(10000, stoppingToken);
+                }
+            }
         }
     }
 }

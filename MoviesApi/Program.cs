@@ -13,14 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddHttpClient<IRandomMoviesService, RandomMoviesService>();
 builder.Services.AddScoped<IMovieRepository,EFMovieRepository>();
 builder.Services.AddScoped<IMovieService,EFMovieService>();
-builder.Services.AddHttpClient();
-//builder.Services.AddScoped<IRandomMoviesService, RandomMoviesService>();
 builder.Services.AddHostedService<BackgroundWorkerService>();
+//builder.Services.AddScoped<IRandomMoviesService, RandomMoviesService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var connection = builder.Configuration.GetConnectionString("Default");
 
